@@ -1,16 +1,17 @@
+import logging
+import numpy
 import os
 import shutil
 import zipfile
 
+from contextlib import closing
 from datetime import datetime, timedelta
+from urllib import request
 
 from geotiff.geotiff import GeoTiff
-import numpy as np
+from config import configure_logging
 
-import urllib.request as request
-from contextlib import closing
-
-class Arc2Cache(object):
+class Arc2Core(object):
 
     CACHE_START_DATE = '20200101' 
     CACHE_END_DATE = '20251231'
@@ -27,23 +28,29 @@ class Arc2Cache(object):
     ZIP_FOLDER = './data'
     TMP_FOLDER = '{}/tmp'.format(ZIP_FOLDER)
 
+    logging.getLogger(__name__).addHandler(logging.NullHandler())
+    configure_logging()
+
     def __init__(self, download_folder=ZIP_FOLDER):
         super().__init__()
 
         self.download_folder = download_folder
 
-        self.offset_start = datetime.strptime(Arc2Cache.CACHE_START_DATE, Arc2Cache.DATE_FORMAT).date().toordinal()
-        self.offset_end = datetime.strptime(Arc2Cache.CACHE_END_DATE, Arc2Cache.DATE_FORMAT).date().toordinal()
+        self.offset_start = datetime.strptime(Arc2Core.CACHE_START_DATE, Arc2Core.DATE_FORMAT).date().toordinal()
+        self.offset_end = datetime.strptime(Arc2Core.CACHE_END_DATE, Arc2Core.DATE_FORMAT).date().toordinal()
 
         # initialize numpy 3d cache
         days = self.offset_end - self.offset_start + 1
-        self.cache = np.full(
-            shape=(Arc2Cache.SIZE_LAT, Arc2Cache.SIZE_LONG, days), 
-            fill_value=Arc2Cache.NO_DATA, 
+        self.cache = numpy.full(
+            shape=(Arc2Core.SIZE_LAT, Arc2Core.SIZE_LONG, days), 
+            fill_value=Arc2Core.NO_DATA, 
             dtype=float)
         
         self.cache_loaded = days * [False]
         self.arc2sample = None
+
+        logging.info("arc2 core initialized. cache dimension {}".format(self.cache.shape))
+
 
     def rainfall(self, latitude, longitude, date, days):
         self._ensure_cached_data(date, days)
@@ -53,22 +60,21 @@ class Arc2Cache(object):
         idx = day_first - self.offset_start
 
         response = self._rainfall_to_txt(day_first, days, self.cache[lat, lng, idx:idx + days])
-        print("response: {}".format(response))
 
         return response
 
 
     def _ensure_cached_data(self, date, days):
-        offset_date = datetime.strptime(date, Arc2Cache.DATE_FORMAT).date().toordinal()
+        offset_date = datetime.strptime(date, Arc2Core.DATE_FORMAT).date().toordinal()
         offset_today = datetime.now().date().toordinal()
         offset_upper = min(offset_date + days, offset_today)
 
         for day in range(offset_date, offset_upper):
-            date_string = datetime.strftime(datetime.fromordinal(day), Arc2Cache.DATE_FORMAT)
+            date_string = datetime.strftime(datetime.fromordinal(day), Arc2Core.DATE_FORMAT)
             idx = day - self.offset_start
 
             if not self.cache_loaded[idx]:
-                print("updating cache for '{}'".format(date_string))
+                logging.info("updating cache for '{}'".format(date_string))
                 (data, tiff_file) = self._get_rainfall_2d(date_string)
                 self.cache[:, :, idx] = data
 
@@ -87,10 +93,10 @@ class Arc2Cache(object):
 
 
     def _get_rainfall_2d(self, date_string):
-        filename_zip = Arc2Cache.ZIP_FILE_TEMPLATE_ZIP.format(date_string)
-        filename = Arc2Cache.ZIP_FILE_TEMPLATE.format(date_string)
+        filename_zip = Arc2Core.ZIP_FILE_TEMPLATE_ZIP.format(date_string)
+        filename = Arc2Core.ZIP_FILE_TEMPLATE.format(date_string)
         local_file_path_zip = os.path.join(self.download_folder, filename_zip)
-        local_file_path = os.path.join(Arc2Cache.TMP_FOLDER, filename)
+        local_file_path = os.path.join(Arc2Core.TMP_FOLDER, filename)
 
         # ensure we have the zipped geotiff
         if not os.path.exists(local_file_path_zip):
@@ -98,7 +104,7 @@ class Arc2Cache(object):
         
         # unzip and load geotiff
         with zipfile.ZipFile(local_file_path_zip, 'r') as f:
-            f.extractall(Arc2Cache.TMP_FOLDER)
+            f.extractall(Arc2Core.TMP_FOLDER)
 
         gt = GeoTiff(local_file_path, crs_code=4236)
         np2d = gt.read()
@@ -111,9 +117,9 @@ class Arc2Cache(object):
 
 
     def _ftp_download_geotiff(self, filename_zip, local_file_path_zip):
-        ftp_file_path = '{}/{}'.format(Arc2Cache.FTP_SERVER, filename_zip)
+        ftp_file_path = '{}/{}'.format(Arc2Core.FTP_SERVER, filename_zip)
 
-        print("fetching {}, saving as {}".format(ftp_file_path, local_file_path_zip))
+        logging.info("fetching {}, saving as {}".format(ftp_file_path, local_file_path_zip))
         with closing(request.urlopen(ftp_file_path)) as r:
             with open(local_file_path_zip, 'wb') as f:
                 shutil.copyfileobj(r, f)
@@ -124,7 +130,7 @@ class Arc2Cache(object):
         i = 0
 
         for day in range(day_first, day_first + days):
-            date = datetime.fromordinal(day).strftime(Arc2Cache.DATE_FORMAT)
+            date = datetime.fromordinal(day).strftime(Arc2Core.DATE_FORMAT)
             lines.append("{} {}".format(date, rainfall[i]))
             i += 1
 
@@ -132,16 +138,15 @@ class Arc2Cache(object):
 
 
 if __name__ == "__main__":
-    c = Arc2Cache()
+    c = Arc2Core()
 
     latitude = -0.9
     longitude = 37.7
     day = '20210612'
     days = 5
 
-    print(c)
-    print(type(c))
-    print(c.rainfall(latitude, longitude, day, days))
     print(c.rainfall(latitude, longitude, '20200201', 4))
     print(c.rainfall(latitude, longitude, '20200202', 5))
     print(c.rainfall(latitude, longitude, '20200201', 7))
+
+    print(c.rainfall(latitude, longitude, day, days))

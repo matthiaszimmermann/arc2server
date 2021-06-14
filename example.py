@@ -1,18 +1,8 @@
 from typing import Dict, List, Tuple
 import numpy as np # type: ignore
 import os
-# from geotiff import GeoTiff # type: ignore
-#from geotiff import
 
 import geotiff
-
-#--
-import pycountry
-
-print("len(pycountry.countries) {}".format(len(pycountry.countries)))
-print("list(pycountry.countries)[0] {}".format(list(pycountry.countries)[0]))
-print("pycountry.countries.get(alpha_2='KE') {}".format(pycountry.countries.get(alpha_2='KE')))
-#---
 
 def read_location(geotiff: geotiff.GeoTiff, latitude: float, longitude: float):
     bb: List[Tuple[float, float]] = [(latitude-0.1, longitude+0.1), (latitude+0.1, longitude-0.1)]
@@ -26,12 +16,9 @@ def lat_long_to_pixel(geotiff, latitude, longitude):
 
     return (pix_lat, pix_lng)
 
-filename = "africa_arc.20200201.tif"
-dir = "./data/tmp/"
+filename = "africa_arc.20210527.tif"
+dir = "./tests/inputs/"
 tiff_file = os.path.join(dir, filename)
-# tiff_file = "/home/kipling/Programs/pylandsat_sandbox/data/gamma/Radmap2019-grid-k_conc-Filtered-AWAGS_RAD_2019.tif"
-# 138.632071411 -32.447310785 138.644218874 -32.456979174
-bounding_box: List[Tuple[float, float]] = [(138.632071411, -32.447310785), (138.644218874, -32.456979174)]
 bounding_box: List[Tuple[float, float]] = [(14.6, 3.3), (14.9, 3.0)]
 
 # get value for single pixel 14.7, 3.1 (expected value: 10.5)
