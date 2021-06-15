@@ -27,7 +27,7 @@ alpine as a lightweight base image did not work well. the larger ubuntu base ima
 run server using docker
 
 ``` bash
-docker run -p 5000:5000 arc2_server
+docker run -v <your-local-cache-dir>:/data/arc2 -d -p 5000:5000 arc2_server
 ```
 
 ## test the server

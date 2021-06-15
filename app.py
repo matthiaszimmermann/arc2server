@@ -9,8 +9,10 @@ from config import configure_logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 configure_logging()
 
+ARC2_CACHE_DIR = '/data/arc2'
+
 app = Flask(__name__)
-cache = Arc2Core()
+cache = Arc2Core(ARC2_CACHE_DIR)
 
 @app.after_request
 def treat_as_plain_text(response):
