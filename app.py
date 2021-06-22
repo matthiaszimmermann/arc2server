@@ -19,7 +19,30 @@ def treat_as_plain_text(response):
     response.headers["content-type"] = "text/plain"
     return response
 
-@app.route("/arc2")
+@app.route("/arc2/cache")
+def acr2cache_status():
+    date = None
+    days = None
+
+    if 'date' in request.args:
+        try:
+            date = datetime.strptime(request.args.get('date'), Arc2Core.DATE_FORMAT).date()
+        except Exception as e:
+            return http_400_response("date value exception {}".format(e))
+
+    if 'days' in request.args:
+        try:
+            days = int(request.args.get('days'))
+        except Exception as e:
+            return http_400_response("days value exception {}".format(e))
+    
+    try:
+        return cache.cache_status(date, days), 200
+    except Exception as e:
+        return http_400_response("rainfall cache exception {}".format(e))
+
+
+@app.route("/arc2/rainfall")
 def arc2():
     # ensure all parameters are provided
     try: 

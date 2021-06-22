@@ -30,10 +30,15 @@ run server using docker
 docker run -v <your-local-cache-dir>:/data/arc2 -d -p 5000:5000 arc2_server
 ```
 
+run test server i parallel
+``` bash
+docker run -v $PWD/data:/data/arc2 -d -p 5001:5000 arc2_server
+```
+
 ## test the server
 
 ``` bash
-curl -X GET "http://localhost:5000/arc2?lat=-0.9&long=37.7&date=20200201&days=7"
+curl -X GET "http://localhost:5000/arc2/rainfall?lat=-0.9&long=37.7&date=20200201&days=7"
 ```
 
 this should produce the following output
@@ -47,6 +52,24 @@ this should produce the following output
 20200206 1.095880150794983
 20200207 0.0
 ```
+
+to check the cache content of the server you may use
+
+``` bash
+curl -X GET "http://localhost:5000/arc2/cache?date=20200205&days=4"
+```
+
+which then produces something as follows
+
+```
+20200205 /data/arc2/africa_arc.20200205.tif.zip
+20200206 /data/arc2/africa_arc.20200206.tif.zip
+20200207 /data/arc2/africa_arc.20200207.tif.zip
+20200208 initialized
+```
+
+hint: the result will depend on which rainfall data has been accessed already
+
 ## geotiff
 
 geotiff code is by KipCrossing provided with LGPL 2.1 licence
