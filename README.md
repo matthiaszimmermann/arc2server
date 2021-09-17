@@ -30,7 +30,7 @@ run server using docker
 docker run --name arc2-server -v $PWD/data:/data/arc2 -d -p 5000:5000 arc2_server
 ```
 
-run test server i parallel
+run test server in parallel on port 5001
 ``` bash
 docker run -v $PWD/data:/data/arc2 -d -p 5001:5000 arc2_server
 ```

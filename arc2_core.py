@@ -15,10 +15,11 @@ from config import configure_logging
 class Arc2Core(object):
 
     # no earlier arc2 data available
-    CACHE_MIN_DATE = '19830101'
+    # CACHE_MIN_DATE = '19830101'
+    CACHE_MIN_DATE = '20210101'
 
     CACHE_START_DATE = CACHE_MIN_DATE
-    CACHE_END_DATE = '20251231'
+    CACHE_END_DATE = '20231231'
     DATE_FORMAT = '%Y%m%d'
 
     SIZE_LAT = 801
