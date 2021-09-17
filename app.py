@@ -87,8 +87,8 @@ def arc2():
     # validate days from query param 'days'
     try:
         days = int(request.args.get('days'))
-        if not (days >= 1 and days <= 365):
-            raise Exception("provided days value {} not in range (1 .. 365)".format(days))            
+        if not (days >= 1 and days <= 366):
+            raise Exception("provided days value {} not in range (1 .. 366)".format(days))            
     except Exception as e:
         return http_400_response("days value exception {}".format(e))
         

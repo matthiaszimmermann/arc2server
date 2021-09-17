@@ -2,6 +2,7 @@ import logging
 import numpy
 import os
 import shutil
+import sys
 import zipfile
 
 from contextlib import closing
@@ -13,7 +14,10 @@ from config import configure_logging
 
 class Arc2Core(object):
 
-    CACHE_START_DATE = '20200101' 
+    # no earlier arc2 data available
+    CACHE_MIN_DATE = '19830101'
+
+    CACHE_START_DATE = CACHE_MIN_DATE
     CACHE_END_DATE = '20251231'
     DATE_FORMAT = '%Y%m%d'
 
@@ -47,7 +51,8 @@ class Arc2Core(object):
         self.cache = numpy.full(
             shape=(Arc2Core.SIZE_LAT, Arc2Core.SIZE_LONG, days), 
             fill_value=Arc2Core.NO_DATA, 
-            dtype=float)
+            dtype=numpy.half)
+            # dtype=float)
         
         self.cache_content = days * [Arc2Core.CACHE_INITIALIZED]
         self.arc2sample = None
@@ -188,8 +193,26 @@ if __name__ == "__main__":
     day = '20210612'
     days = 5
 
-    print(c.rainfall(latitude, longitude, '20200201', 4))
-    print(c.rainfall(latitude, longitude, '20200202', 5))
-    print(c.rainfall(latitude, longitude, '20200201', 7))
+    # initialize arc2 sample
+    c.rainfall(latitude, longitude, day, 1)
 
-    print(c.rainfall(latitude, longitude, day, days))
+    if len(sys.argv) in [3,4]:
+        latitude = float(sys.argv[1])
+        longitude = float(sys.argv[2])
+        pix_lat, pix_long = c._lat_long_to_pixel(latitude, longitude)
+
+        print("lat/long: {}/{}".format(latitude, longitude))
+        print("pixel x (long) {}".format(pix_long))
+        print("pixel y (lat) {}".format(pix_lat))
+
+        if len(sys.argv) > 3:
+            day = sys.argv[3]
+
+        print(c.rainfall(latitude, longitude, day, 1))
+
+    else:
+        print(c.rainfall(latitude, longitude, '20200201', 4))
+        print(c.rainfall(latitude, longitude, '20200202', 5))
+        print(c.rainfall(latitude, longitude, '20200201', 7))
+
+        print(c.rainfall(latitude, longitude, day, days))
