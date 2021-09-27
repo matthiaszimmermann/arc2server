@@ -1,6 +1,11 @@
 # arc2server
 rest server for arc2 rainfall data
 
+## repository moved to new location
+
+this rerpository is no longer actively maintained
+see [here](https://github.com/etherisc/arc2-server) for the current location of the maintained repository  
+
 ## run the server
 
 the server may be run using the command line or docker
